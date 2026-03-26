@@ -28,8 +28,6 @@ export const TaskModal = () => {
   const [isMilestone, setIsMilestone] = useState(false);
   const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
 
-  const allColors = [...PRESET_COLORS, ...customColors];
-
   useEffect(() => {
     if (isTaskModalOpen) {
       if (editingTaskId) {
@@ -154,21 +152,44 @@ export const TaskModal = () => {
                   className="fixed inset-0 z-10" 
                   onClick={() => setIsColorDropdownOpen(false)} 
                 />
-                <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto p-2">
-                  <div className="flex flex-wrap gap-1.5">
-                    {allColors.map(c => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => {
-                          setColor(c);
-                          setIsColorDropdownOpen(false);
-                        }}
-                        className={`w-6 h-6 rounded-full border ${color.toLowerCase() === c.toLowerCase() ? 'border-slate-800 scale-110 shadow-sm' : 'border-black/10 hover:scale-110'} transition-all`}
-                        style={{ backgroundColor: c }}
-                        title={c}
-                      />
-                    ))}
+                <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-y-auto p-3">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-10 gap-1.5">
+                      {PRESET_COLORS.map(c => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => {
+                            setColor(c);
+                            setIsColorDropdownOpen(false);
+                          }}
+                          className={`w-6 h-6 rounded-full border ${color.toLowerCase() === c.toLowerCase() ? 'border-slate-800 scale-110 shadow-sm' : 'border-black/10 hover:scale-110'} transition-all`}
+                          style={{ backgroundColor: c }}
+                          title={c}
+                        />
+                      ))}
+                    </div>
+                    
+                    {customColors.length > 0 && (
+                      <>
+                        <div className="h-px bg-slate-100 w-full" />
+                        <div className="flex flex-wrap gap-1.5">
+                          {customColors.map(c => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => {
+                                setColor(c);
+                                setIsColorDropdownOpen(false);
+                              }}
+                              className={`w-6 h-6 rounded-full border ${color.toLowerCase() === c.toLowerCase() ? 'border-slate-800 scale-110 shadow-sm' : 'border-black/10 hover:scale-110'} transition-all`}
+                              style={{ backgroundColor: c }}
+                              title={c}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </>

@@ -6,44 +6,14 @@ import { Language } from './i18n';
 export type ViewMode = 'daily' | 'weekly';
 
 export const PRESET_COLORS = [
-  // Slate
-  '#cbd5e1', '#94a3b8', '#64748b', '#475569', '#334155',
-  // Gray
-  '#d1d5db', '#9ca3af', '#6b7280', '#4b5563', '#374151',
-  // Red
-  '#fca5a5', '#f87171', '#ef4444', '#dc2626', '#b91c1c',
-  // Orange
-  '#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c',
-  // Amber
-  '#fcd34d', '#fbbf24', '#f59e0b', '#d97706', '#b45309',
-  // Yellow
-  '#fde047', '#facc15', '#eab308', '#ca8a04', '#a16207',
-  // Lime
-  '#bef264', '#a3e635', '#84cc16', '#65a30d', '#4d7c0f',
-  // Green
-  '#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d',
-  // Emerald
-  '#6ee7b7', '#34d399', '#10b981', '#059669', '#047857',
-  // Teal
-  '#5eead4', '#2dd4bf', '#14b8a6', '#0d9488', '#0f766e',
-  // Cyan
-  '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490',
-  // Sky
-  '#7dd3fc', '#38bdf8', '#0ea5e9', '#0284c7', '#0369a1',
-  // Blue
-  '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8',
-  // Indigo
-  '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca',
-  // Violet
-  '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed', '#6d28d9',
-  // Purple
-  '#d8b4fe', '#c084fc', '#a855f7', '#9333ea', '#7e22ce',
-  // Fuchsia
-  '#f0abfc', '#e879f9', '#d946ef', '#c026d3', '#a21caf',
-  // Pink
-  '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d',
-  // Rose
-  '#fda4af', '#fb7185', '#f43f5e', '#e11d48', '#be123c'
+  // Row 1: Pastel (200) - Red, Orange, Yellow, Green, Teal, Blue, Indigo, Purple, Pink, Slate
+  '#fecaca', '#fed7aa', '#fef08a', '#bbf7d0', '#99f6e4', '#bfdbfe', '#c7d2fe', '#e9d5ff', '#fbcfe8', '#e2e8f0',
+  // Row 2: Soft (400)
+  '#f87171', '#fb923c', '#facc15', '#4ade80', '#2dd4bf', '#60a5fa', '#818cf8', '#c084fc', '#f472b6', '#94a3b8',
+  // Row 3: Vibrant (600)
+  '#dc2626', '#ea580c', '#ca8a04', '#16a34a', '#0d9488', '#2563eb', '#4f46e5', '#9333ea', '#db2777', '#475569',
+  // Row 4: Dark (800)
+  '#991b1b', '#9a3412', '#854d0e', '#166534', '#115e59', '#1e40af', '#3730a3', '#6b21a8', '#9d174d', '#1e293b'
 ];
 
 interface GlobalState {

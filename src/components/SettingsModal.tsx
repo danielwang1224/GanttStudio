@@ -171,7 +171,7 @@ export const SettingsModal = () => {
                 <h4 className="text-xs font-medium text-slate-500 mb-2">
                   {language === 'zh' ? '預設顏色' : 'Preset Colors'}
                 </h4>
-                <div className="flex flex-wrap gap-1.5 p-2 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="grid grid-cols-10 gap-1.5 p-2 bg-slate-50 rounded-lg border border-slate-100 w-fit">
                   {PRESET_COLORS.map(color => (
                     <div 
                       key={color}

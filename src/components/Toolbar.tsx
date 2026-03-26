@@ -315,6 +315,7 @@ export const Toolbar = ({ svgRef }: { svgRef: React.RefObject<SVGSVGElement | nu
         if (data.tasks) {
           const parsedTasks = data.tasks.map((t: any) => ({
             ...t,
+            color: t.color || t.ColorCode || (data.groups ? data.groups.find((g: any) => g.id === t.groupId)?.color : undefined) || '#94a3b8',
             startDate: new Date(t.startDate),
             endDate: new Date(t.endDate)
           }));
@@ -324,7 +325,7 @@ export const Toolbar = ({ svgRef }: { svgRef: React.RefObject<SVGSVGElement | nu
             return {
               id: t.Id || Math.random().toString(36).substring(2, 9),
               name: t.Name,
-              color: t.ColorCode || '#94a3b8',
+              color: t.ColorCode || (data.Groups ? data.Groups.find((g: any) => g.Id === t.GroupId)?.ColorCode : undefined) || '#94a3b8',
               startDate: new Date(t.StartDate),
               endDate: new Date(t.EndDate),
               progress: t.Progress || 0

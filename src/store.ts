@@ -360,6 +360,7 @@ export const useStore = create<AppState>((set) => ({
         ...v.data,
         tasks: v.data.tasks.map(t => ({
           ...t,
+          color: t.color || (t as any).ColorCode || ((v.data as any).groups ? (v.data as any).groups.find((g: any) => g.id === (t as any).groupId)?.color : undefined) || '#94a3b8',
           startDate: new Date(t.startDate),
           endDate: new Date(t.endDate)
         }))

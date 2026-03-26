@@ -19,7 +19,7 @@ export default function App() {
   const ganttScrollRef = useRef<HTMLDivElement>(null);
   const { 
     undo, redo, 
-    tasks, groups, clientName, projectName, projectVersion, versions, viewMode, zoomLevel,
+    tasks, clientName, projectName, projectVersion, versions, viewMode, zoomLevel,
     language, showVerticalLines, showTodayHighlight, dateFormat, weekNumbering
   } = useStore();
 

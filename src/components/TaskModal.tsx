@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useStore, Task } from '../store';
+import { useStore, useGlobalStore, PRESET_COLORS, Task } from '../store';
 import { translations } from '../i18n';
 import { format, startOfDay, addDays } from 'date-fns';
 import { X, Trash2, ChevronDown } from 'lucide-react';
@@ -10,22 +10,25 @@ export const TaskModal = () => {
     editingTaskId, 
     closeTaskModal, 
     tasks, 
-    groups, 
     addTask, 
     updateTask, 
     deleteTask,
     language
   } = useStore();
 
+  const { customColors } = useGlobalStore();
+
   const t = translations[language];
 
   const [name, setName] = useState('');
-  const [groupId, setGroupId] = useState('');
+  const [color, setColor] = useState(PRESET_COLORS[0]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [progress, setProgress] = useState(0);
   const [isMilestone, setIsMilestone] = useState(false);
-  const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
+  const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
+
+  const allColors = [...PRESET_COLORS, ...customColors];
 
   useEffect(() => {
     if (isTaskModalOpen) {
@@ -33,7 +36,7 @@ export const TaskModal = () => {
         const task = tasks.find(t => t.id === editingTaskId);
         if (task) {
           setName(task.name);
-          setGroupId(task.groupId);
+          setColor(task.color || PRESET_COLORS[0]);
           setStartDate(format(task.startDate, 'yyyy-MM-dd'));
           setEndDate(format(task.endDate, 'yyyy-MM-dd'));
           setProgress(task.progress || 0);
@@ -42,21 +45,21 @@ export const TaskModal = () => {
       } else {
         const today = startOfDay(new Date());
         setName('');
-        setGroupId(groups[0]?.id || '');
+        setColor(PRESET_COLORS[0]);
         setStartDate(format(today, 'yyyy-MM-dd'));
         setEndDate(format(addDays(today, 3), 'yyyy-MM-dd'));
         setProgress(0);
         setIsMilestone(false);
       }
     }
-  }, [isTaskModalOpen, editingTaskId, tasks, groups]);
+  }, [isTaskModalOpen, editingTaskId, tasks]);
 
   if (!isTaskModalOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name.trim() || !groupId || !startDate || (!isMilestone && !endDate)) {
+    if (!name.trim() || !color || !startDate || (!isMilestone && !endDate)) {
       alert('Please fill in all fields');
       return;
     }
@@ -72,7 +75,7 @@ export const TaskModal = () => {
     if (editingTaskId) {
       updateTask(editingTaskId, {
         name: name.trim(),
-        groupId,
+        color,
         startDate: start,
         endDate: isMilestone ? start : end,
         progress,
@@ -81,7 +84,7 @@ export const TaskModal = () => {
     } else {
       addTask({
         name: name.trim(),
-        groupId,
+        color,
         startDate: start,
         endDate: isMilestone ? start : end,
         progress,
@@ -131,48 +134,42 @@ export const TaskModal = () => {
 
           <div className="relative">
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t.group}
+              {t.groupColors || 'Color'}
             </label>
             <button
               type="button"
-              onClick={() => setIsGroupDropdownOpen(!isGroupDropdownOpen)}
+              onClick={() => setIsColorDropdownOpen(!isColorDropdownOpen)}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between bg-white"
             >
-              {(() => {
-                const selectedGroup = groups.find(g => g.id === groupId);
-                return selectedGroup ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: selectedGroup.color }} />
-                    <span>{selectedGroup.name}</span>
-                  </div>
-                ) : (
-                  <span className="text-slate-400">Select a group...</span>
-                );
-              })()}
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full border border-slate-200" style={{ backgroundColor: color }} />
+                <span className="text-sm font-mono uppercase">{color}</span>
+              </div>
               <ChevronDown size={16} className="text-slate-400" />
             </button>
             
-            {isGroupDropdownOpen && (
+            {isColorDropdownOpen && (
               <>
                 <div 
                   className="fixed inset-0 z-10" 
-                  onClick={() => setIsGroupDropdownOpen(false)} 
+                  onClick={() => setIsColorDropdownOpen(false)} 
                 />
-                <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {groups.map(g => (
-                    <button
-                      key={g.id}
-                      type="button"
-                      onClick={() => {
-                        setGroupId(g.id);
-                        setIsGroupDropdownOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 transition-colors"
-                    >
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: g.color }} />
-                      <span>{g.name}</span>
-                    </button>
-                  ))}
+                <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto p-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {allColors.map(c => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => {
+                          setColor(c);
+                          setIsColorDropdownOpen(false);
+                        }}
+                        className={`w-6 h-6 rounded-full border ${color.toLowerCase() === c.toLowerCase() ? 'border-slate-800 scale-110 shadow-sm' : 'border-black/10 hover:scale-110'} transition-all`}
+                        style={{ backgroundColor: c }}
+                        title={c}
+                      />
+                    ))}
+                  </div>
                 </div>
               </>
             )}

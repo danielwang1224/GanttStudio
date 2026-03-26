@@ -1,21 +1,77 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { addDays, startOfDay, differenceInDays, startOfWeek, endOfWeek, min, max } from 'date-fns';
 import { Language } from './i18n';
 
 export type ViewMode = 'daily' | 'weekly';
 
-export interface Group {
-  id: string;
-  name: string;
-  color: string;
+export const PRESET_COLORS = [
+  // Slate
+  '#cbd5e1', '#94a3b8', '#64748b', '#475569', '#334155',
+  // Gray
+  '#d1d5db', '#9ca3af', '#6b7280', '#4b5563', '#374151',
+  // Red
+  '#fca5a5', '#f87171', '#ef4444', '#dc2626', '#b91c1c',
+  // Orange
+  '#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c',
+  // Amber
+  '#fcd34d', '#fbbf24', '#f59e0b', '#d97706', '#b45309',
+  // Yellow
+  '#fde047', '#facc15', '#eab308', '#ca8a04', '#a16207',
+  // Lime
+  '#bef264', '#a3e635', '#84cc16', '#65a30d', '#4d7c0f',
+  // Green
+  '#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d',
+  // Emerald
+  '#6ee7b7', '#34d399', '#10b981', '#059669', '#047857',
+  // Teal
+  '#5eead4', '#2dd4bf', '#14b8a6', '#0d9488', '#0f766e',
+  // Cyan
+  '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490',
+  // Sky
+  '#7dd3fc', '#38bdf8', '#0ea5e9', '#0284c7', '#0369a1',
+  // Blue
+  '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8',
+  // Indigo
+  '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca',
+  // Violet
+  '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed', '#6d28d9',
+  // Purple
+  '#d8b4fe', '#c084fc', '#a855f7', '#9333ea', '#7e22ce',
+  // Fuchsia
+  '#f0abfc', '#e879f9', '#d946ef', '#c026d3', '#a21caf',
+  // Pink
+  '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d',
+  // Rose
+  '#fda4af', '#fb7185', '#f43f5e', '#e11d48', '#be123c'
+];
+
+interface GlobalState {
+  customColors: string[];
+  addCustomColor: (color: string) => void;
+  removeCustomColor: (color: string) => void;
 }
+
+export const useGlobalStore = create<GlobalState>()(
+  persist(
+    (set) => ({
+      customColors: [],
+      addCustomColor: (color) => set((state) => ({
+        customColors: state.customColors.includes(color) ? state.customColors : [...state.customColors, color]
+      })),
+      removeCustomColor: (color) => set((state) => ({
+        customColors: state.customColors.filter(c => c !== color)
+      }))
+    }),
+    { name: 'gantt-global-colors' }
+  )
+);
 
 export interface ProjectState {
   clientName: string;
   projectName: string;
   projectVersion: string;
   tasks: Task[];
-  groups: Group[];
   viewMode: ViewMode;
   zoomLevel: number;
   versions?: ProjectVersion[];
@@ -33,7 +89,7 @@ export interface ProjectVersion {
 export interface Task {
   id: string;
   name: string;
-  groupId: string;
+  color: string;
   startDate: Date;
   endDate: Date;
   progress: number;
@@ -42,7 +98,6 @@ export interface Task {
 
 export interface HistoryState {
   tasks: Task[];
-  groups: Group[];
 }
 
 const calculateBounds = (tasks: Task[], viewMode: ViewMode) => {
@@ -87,7 +142,6 @@ interface AppState {
   setProjectInfo: (clientName: string, projectName: string, projectVersion: string) => void;
 
   tasks: Task[];
-  groups: Group[];
   viewMode: ViewMode;
   zoomLevel: number;
   chartStartDate: Date;
@@ -144,11 +198,6 @@ interface AppState {
   updateTaskName: (id: string, name: string) => void;
   reorderTasks: (activeId: string, overId: string) => void;
   
-  addGroup: (group: Group) => void;
-  updateGroup: (id: string, updates: Partial<Group>) => void;
-  deleteGroup: (id: string) => void;
-  updateGroupColor: (id: string, color: string) => void;
-  
   setViewMode: (mode: ViewMode) => void;
   setZoomLevel: (level: number) => void;
   setChartDates: (start: Date, end: Date) => void;
@@ -161,28 +210,20 @@ interface AppState {
   setSidebarWidth: (width: number) => void;
 }
 
-const initialGroups: Group[] = [
-  { id: 'g1', name: 'Sample', color: '#f4a7b9' },
-  { id: 'g2', name: 'Test', color: '#f8b500' },
-  { id: 'g3', name: 'Certification', color: '#a8c97f' },
-  { id: 'g4', name: 'Production', color: '#33a6b8' },
-  { id: 'g5', name: 'Documentation', color: '#9b90c4' },
-];
-
 const today = startOfDay(new Date());
 
 export const initialTasks: Task[] = [
-  { id: 't1', name: 'Setup Project', groupId: 'g1', startDate: today, endDate: addDays(today, 3), progress: 100 },
-  { id: 't2', name: 'Design UI', groupId: 'g2', startDate: addDays(today, 2), endDate: addDays(today, 6), progress: 60 },
-  { id: 't3', name: 'Implement Backend', groupId: 'g4', startDate: addDays(today, 4), endDate: addDays(today, 10), progress: 20 },
-  { id: 't4', name: 'Marketing Campaign', groupId: 'g5', startDate: addDays(today, 8), endDate: addDays(today, 14), progress: 0 },
+  { id: 't1', name: 'Setup Project', color: '#f4a7b9', startDate: today, endDate: addDays(today, 3), progress: 100 },
+  { id: 't2', name: 'Design UI', color: '#f8b500', startDate: addDays(today, 2), endDate: addDays(today, 6), progress: 60 },
+  { id: 't3', name: 'Implement Backend', color: '#33a6b8', startDate: addDays(today, 4), endDate: addDays(today, 10), progress: 20 },
+  { id: 't4', name: 'Marketing Campaign', color: '#9b90c4', startDate: addDays(today, 8), endDate: addDays(today, 14), progress: 0 },
 ];
 
 const initialBounds = calculateBounds(initialTasks, 'weekly');
 
 const pushHistory = (state: AppState): Pick<AppState, 'past' | 'future'> => {
   return {
-    past: [...state.past, { tasks: state.tasks, groups: state.groups }],
+    past: [...state.past, { tasks: state.tasks }],
     future: [],
   };
 };
@@ -194,7 +235,6 @@ export const useStore = create<AppState>((set) => ({
   setProjectInfo: (clientName, projectName, projectVersion) => set({ clientName, projectName, projectVersion }),
 
   tasks: initialTasks,
-  groups: initialGroups,
   viewMode: 'weekly',
   zoomLevel: 100,
   chartStartDate: initialBounds.chartStartDate,
@@ -216,13 +256,12 @@ export const useStore = create<AppState>((set) => ({
     if (state.past.length === 0) return state;
     const previous = state.past[state.past.length - 1];
     const newPast = state.past.slice(0, -1);
-    const current: HistoryState = { tasks: state.tasks, groups: state.groups };
+    const current: HistoryState = { tasks: state.tasks };
     const bounds = calculateBounds(previous.tasks, state.viewMode);
     return {
       past: newPast,
       future: [current, ...state.future],
       tasks: previous.tasks,
-      groups: previous.groups,
       chartStartDate: bounds.chartStartDate,
       chartEndDate: bounds.chartEndDate,
     };
@@ -232,13 +271,12 @@ export const useStore = create<AppState>((set) => ({
     if (state.future.length === 0) return state;
     const next = state.future[0];
     const newFuture = state.future.slice(1);
-    const current: HistoryState = { tasks: state.tasks, groups: state.groups };
+    const current: HistoryState = { tasks: state.tasks };
     const bounds = calculateBounds(next.tasks, state.viewMode);
     return {
       past: [...state.past, current],
       future: newFuture,
       tasks: next.tasks,
-      groups: next.groups,
       chartStartDate: bounds.chartStartDate,
       chartEndDate: bounds.chartEndDate,
     };
@@ -309,7 +347,6 @@ export const useStore = create<AppState>((set) => ({
         projectName: state.projectName,
         projectVersion: nextVersion,
         tasks: state.tasks,
-        groups: state.groups,
         viewMode: state.viewMode,
         zoomLevel: state.zoomLevel,
       }
@@ -328,7 +365,6 @@ export const useStore = create<AppState>((set) => ({
       projectName: version.data.projectName || state.projectName,
       projectVersion: version.version || version.data.projectVersion || state.projectVersion,
       tasks: version.data.tasks,
-      groups: version.data.groups,
       viewMode: version.data.viewMode,
       zoomLevel: version.data.zoomLevel,
       chartStartDate: bounds.chartStartDate,
@@ -365,7 +401,6 @@ export const useStore = create<AppState>((set) => ({
       projectName: data.projectName || 'New Project',
       projectVersion: data.projectVersion || 'v0',
       tasks: data.tasks,
-      groups: data.groups,
       versions: parsedVersions,
       viewMode: data.viewMode || 'weekly',
       zoomLevel: data.zoomLevel || 100,
@@ -451,22 +486,6 @@ export const useStore = create<AppState>((set) => ({
     return { ...pushHistory(state), tasks: newTasks };
   }),
 
-  addGroup: (group) => set((state) => ({ ...pushHistory(state), groups: [...state.groups, group] })),
-  updateGroup: (id, updates) => set((state) => ({
-    ...pushHistory(state),
-    groups: state.groups.map(g => g.id === id ? { ...g, ...updates } : g)
-  })),
-  deleteGroup: (id) => set((state) => ({
-    ...pushHistory(state),
-    groups: state.groups.filter(g => g.id !== id),
-    // Optionally handle tasks that belong to this group, e.g., move them to another group or delete them.
-    // For now, we'll just delete the group. Tasks might not render their group color.
-  })),
-  updateGroupColor: (id, color) => set((state) => ({
-    ...pushHistory(state),
-    groups: state.groups.map(g => g.id === id ? { ...g, color } : g)
-  })),
-
   setViewMode: (viewMode) => set((state) => {
     const bounds = calculateBounds(state.tasks, viewMode);
     return { 
@@ -479,14 +498,12 @@ export const useStore = create<AppState>((set) => ({
   setChartDates: (chartStartDate, chartEndDate) => set({ chartStartDate, chartEndDate }),
   resetProject: () => {
     const emptyTasks: Task[] = [];
-    const emptyGroups: Group[] = [{ id: 'g1', name: 'Group 1', color: '#3b82f6' }];
     const bounds = calculateBounds(emptyTasks, 'weekly');
     set({
       clientName: 'New Client',
       projectName: 'New Project',
       projectVersion: 'v0',
       tasks: emptyTasks,
-      groups: emptyGroups,
       viewMode: 'weekly',
       zoomLevel: 100,
       chartStartDate: bounds.chartStartDate,

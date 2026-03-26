@@ -13,7 +13,6 @@ interface GanttChartProps {
 export const GanttChart = React.forwardRef<SVGSVGElement, GanttChartProps>(({ scrollRef, onScroll }, ref) => {
   const { 
     tasks, 
-    groups, 
     viewMode, 
     zoomLevel, 
     setZoomLevel, 
@@ -349,10 +348,9 @@ export const GanttChart = React.forwardRef<SVGSVGElement, GanttChartProps>(({ sc
             const x = startOffset * DAY_WIDTH;
             const y = task.y + (task.height - 24) / 2; // Center vertically, 24px height
             const width = duration * DAY_WIDTH;
-            const group = groups.find(g => g.id === task.groupId);
-            const accentColor = group?.color || '#94a3b8';
-            const barBgColor = group ? group.color : '#e2e8f0';
-            const barBgOpacity = group ? 0.2 : 1;
+            const accentColor = task.color || '#94a3b8';
+            const barBgColor = task.color || '#e2e8f0';
+            const barBgOpacity = 0.2;
             const progressWidth = width * ((task.progress || 0) / 100);
             
             const durationText = viewMode === 'daily' ? `${duration}D` : `${Math.ceil(duration / 7)}W`;

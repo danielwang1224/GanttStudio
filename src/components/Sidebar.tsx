@@ -6,10 +6,10 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Plus, Pencil, Trash2, Diamond } from 'lucide-react';
 import { startOfDay, addDays } from 'date-fns';
 
-import { Task, Group } from '../store';
+import { Task } from '../store';
 import { translations } from '../i18n';
 
-const SortableTaskItem = ({ task, group }: { key?: React.Key, task: Task, group?: Group }) => {
+const SortableTaskItem = ({ task }: { key?: React.Key, task: Task }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
   const { openTaskModal, language, setRowHeight } = useStore();
   const t = translations[language];
@@ -31,7 +31,7 @@ const SortableTaskItem = ({ task, group }: { key?: React.Key, task: Task, group?
     itemRef.current = node;
   };
 
-  const accentColor = group?.color || '#cbd5e1';
+  const accentColor = task.color || '#cbd5e1';
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -63,7 +63,7 @@ const SortableTaskItem = ({ task, group }: { key?: React.Key, task: Task, group?
 };
 
 export const Sidebar = ({ scrollRef, onScroll }: { scrollRef: React.RefObject<HTMLDivElement | null>, onScroll: (e: React.UIEvent<HTMLDivElement>) => void }) => {
-  const { tasks, groups, reorderTasks, openTaskModal, language, sidebarWidth } = useStore();
+  const { tasks, reorderTasks, openTaskModal, language, sidebarWidth } = useStore();
   const t = translations[language];
 
   const sensors = useSensors(
@@ -102,7 +102,7 @@ export const Sidebar = ({ scrollRef, onScroll }: { scrollRef: React.RefObject<HT
           <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
             <div className="flex flex-col">
               {tasks.map(task => (
-                <SortableTaskItem key={task.id} task={task} group={groups.find(g => g.id === task.groupId)} />
+                <SortableTaskItem key={task.id} task={task} />
               ))}
             </div>
           </SortableContext>

@@ -16,9 +16,8 @@ export const exportProjectData = async (): Promise<boolean> => {
     projectVersion: state.projectVersion,
     tasks: state.tasks.map(t => ({
       ...t,
-      ColorCode: state.groups.find(g => g.id === t.groupId)?.color || '#94a3b8'
+      ColorCode: t.color || '#94a3b8'
     })),
-    groups: state.groups,
     versions: state.versions,
     viewMode: state.viewMode,
     zoomLevel: state.zoomLevel

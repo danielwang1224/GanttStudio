@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { exportProjectData, getProjectFileName } from '../utils/export';
 
 export const Toolbar = ({ svgRef }: { svgRef: React.RefObject<SVGSVGElement | null> }) => {
-  const { viewMode, setViewMode, groups, zoomLevel, setZoomLevel, importProject, openVersionModal, language, openSettingsModal, undo, redo, past, future } = useStore();
+  const { viewMode, setViewMode, zoomLevel, setZoomLevel, importProject, openVersionModal, language, openSettingsModal, undo, redo, past, future } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -85,14 +85,12 @@ export const Toolbar = ({ svgRef }: { svgRef: React.RefObject<SVGSVGElement | nu
     });
     
     taskPositions.forEach((task) => {
-      const group = storeState.groups.find(g => g.id === task.groupId);
-      
       const rowBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
       rowBg.setAttribute('x', '0');
       rowBg.setAttribute('y', (HEADER_HEIGHT + task.y).toString());
       rowBg.setAttribute('width', SIDEBAR_WIDTH.toString());
       rowBg.setAttribute('height', task.height.toString());
-      rowBg.setAttribute('fill', group ? group.color : '#cbd5e1');
+      rowBg.setAttribute('fill', task.color || '#cbd5e1');
       rowBg.setAttribute('stroke', '#f1f5f9');
       rowBg.setAttribute('stroke-width', '1');
       sidebarGroup.appendChild(rowBg);
@@ -314,7 +312,7 @@ export const Toolbar = ({ svgRef }: { svgRef: React.RefObject<SVGSVGElement | nu
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
-        if (data.tasks && data.groups) {
+        if (data.tasks) {
           const parsedTasks = data.tasks.map((t: any) => ({
             ...t,
             startDate: new Date(t.startDate),
@@ -322,26 +320,11 @@ export const Toolbar = ({ svgRef }: { svgRef: React.RefObject<SVGSVGElement | nu
           }));
           importProject({ ...data, tasks: parsedTasks });
         } else if (data.Tasks && Array.isArray(data.Tasks)) {
-          const newGroups: { id: string; name: string; color: string }[] = [];
-          const colorToGroupId = new Map<string, string>();
-          let groupCounter = 1;
-
           const parsedTasks = data.Tasks.map((t: any) => {
-            let groupId = colorToGroupId.get(t.ColorCode);
-            if (!groupId) {
-              groupId = `g-imported-${groupCounter++}`;
-              colorToGroupId.set(t.ColorCode, groupId);
-              newGroups.push({
-                id: groupId,
-                name: `Group ${groupCounter - 1}`,
-                color: t.ColorCode || '#94a3b8'
-              });
-            }
-
             return {
               id: t.Id || Math.random().toString(36).substring(2, 9),
               name: t.Name,
-              groupId: groupId,
+              color: t.ColorCode || '#94a3b8',
               startDate: new Date(t.StartDate),
               endDate: new Date(t.EndDate),
               progress: t.Progress || 0
@@ -353,7 +336,6 @@ export const Toolbar = ({ svgRef }: { svgRef: React.RefObject<SVGSVGElement | nu
             projectName: 'Imported Project',
             projectVersion: 'v0',
             tasks: parsedTasks,
-            groups: newGroups,
             viewMode: 'weekly',
             zoomLevel: 100
           });

@@ -1,24 +1,7 @@
 import React, { useState } from 'react';
-import { useStore } from '../store';
+import { useStore, useGlobalStore, PRESET_COLORS } from '../store';
 import { translations } from '../i18n';
 import { X, Plus, Trash2 } from 'lucide-react';
-
-const PRESET_COLORS = [
-  '#f4a7b9', // Sakura (Cherry Blossom)
-  '#e16b8c', // Momo (Peach)
-  '#d71345', // Kurenai (Crimson)
-  '#f8b500', // Yamabuki (Golden Yellow)
-  '#f7d94c', // Nanohana (Rapeseed)
-  '#a8c97f', // Moegi (Yellow Green)
-  '#7b8d42', // Matcha (Green Tea)
-  '#33a6b8', // Asagi (Pale Blue-Green)
-  '#59b9c6', // Shinbashi (Vibrant Blue)
-  '#274a78', // Ai (Indigo)
-  '#9b90c4', // Fuji (Wisteria)
-  '#8a8c60', // Rikyucha (Brownish Green)
-  '#d3cbc6', // Shiracha (Light Beige)
-  '#595857', // Sumi (Ink Black)
-];
 
 export const SettingsModal = () => {
   const { 
@@ -36,31 +19,21 @@ export const SettingsModal = () => {
     setWeekNumbering,
     sidebarWidth,
     setSidebarWidth,
-    groups,
-    addGroup,
-    updateGroup,
-    deleteGroup,
-    updateGroupColor
   } = useStore();
 
-  const [newGroupName, setNewGroupName] = useState('');
-  const [newGroupColor, setNewGroupColor] = useState('#3b82f6');
+  const { customColors, addCustomColor, removeCustomColor } = useGlobalStore();
+
+  const [newColorHex, setNewColorHex] = useState('#3b82f6');
 
   if (!isSettingsModalOpen) return null;
 
   const t = translations[language];
 
-  const handleAddGroup = (e: React.FormEvent) => {
+  const handleAddColor = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newGroupName.trim()) return;
-    
-    addGroup({
-      id: `g${Date.now()}`,
-      name: newGroupName.trim(),
-      color: newGroupColor
-    });
-    
-    setNewGroupName('');
+    if (/^#[0-9A-F]{6}$/i.test(newColorHex)) {
+      addCustomColor(newColorHex.toLowerCase());
+    }
   };
 
   return (
@@ -186,86 +159,79 @@ export const SettingsModal = () => {
             </div>
           </section>
 
-          {/* Group Settings */}
+          {/* Color Settings */}
           <section className="space-y-4">
             <h3 className="text-sm font-semibold text-slate-800 border-b border-slate-200 pb-2">
-              {t.groupColors}
+              {t.groupColors || 'Colors'}
             </h3>
             
-            <div className="space-y-3">
-              {groups.map(group => (
-                <div key={group.id} className="flex flex-col gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                  <div className="flex items-center gap-3">
+            <div className="space-y-4">
+              {/* Preset Colors */}
+              <div>
+                <h4 className="text-xs font-medium text-slate-500 mb-2">
+                  {language === 'zh' ? '預設顏色' : 'Preset Colors'}
+                </h4>
+                <div className="flex flex-wrap gap-1.5 p-2 bg-slate-50 rounded-lg border border-slate-100">
+                  {PRESET_COLORS.map(color => (
+                    <div 
+                      key={color}
+                      className="w-6 h-6 rounded-full border border-slate-200 shadow-sm"
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom Colors */}
+              <div>
+                <h4 className="text-xs font-medium text-slate-500 mb-2">
+                  {language === 'zh' ? '自訂顏色' : 'Custom Colors'}
+                </h4>
+                <div className="flex flex-col gap-2 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100">
+                  <form onSubmit={handleAddColor} className="flex items-center gap-3">
                     <input
                       type="color"
-                      value={group.color}
-                      onChange={(e) => updateGroupColor(group.id, e.target.value)}
-                      className="w-8 h-8 rounded cursor-pointer border-0 p-0 shrink-0"
+                      value={newColorHex}
+                      onChange={(e) => setNewColorHex(e.target.value)}
+                      className="w-8 h-8 rounded cursor-pointer border-0 p-0 shrink-0 bg-transparent"
                     />
                     <input
                       type="text"
-                      value={group.name}
-                      onChange={(e) => updateGroup(group.id, { name: e.target.value })}
-                      className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-slate-700 px-2"
+                      value={newColorHex}
+                      onChange={(e) => setNewColorHex(e.target.value)}
+                      placeholder="#000000"
+                      className="flex-1 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white uppercase font-mono"
+                      pattern="^#[0-9a-fA-F]{6}$"
                     />
                     <button
-                      onClick={() => deleteGroup(group.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                      title={t.delete}
+                      type="submit"
+                      className="p-1.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
                     >
-                      <Trash2 size={16} />
+                      <Plus size={20} />
                     </button>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5 pl-11">
-                    {PRESET_COLORS.map(c => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => updateGroupColor(group.id, c)}
-                        className={`w-4 h-4 rounded-full border ${group.color.toLowerCase() === c.toLowerCase() ? 'border-slate-800 scale-110 shadow-sm' : 'border-black/10 hover:scale-110'} transition-all`}
-                        style={{ backgroundColor: c }}
-                        title={c}
-                      />
+                  </form>
+                </div>
+
+                {customColors.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-2 mt-2">
+                    {customColors.map(color => (
+                      <div key={color} className="relative group">
+                        <div 
+                          className="w-8 h-8 rounded-full border border-slate-200 shadow-sm"
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                        <button
+                          onClick={() => removeCustomColor(color)}
+                          className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
                     ))}
                   </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-col gap-2 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100 mt-4">
-              <form onSubmit={handleAddGroup} className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={newGroupColor}
-                  onChange={(e) => setNewGroupColor(e.target.value)}
-                  className="w-8 h-8 rounded cursor-pointer border-0 p-0 shrink-0"
-                />
-                <input
-                  type="text"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                  placeholder={t.addGroup}
-                  className="flex-1 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                />
-                <button
-                  type="submit"
-                  disabled={!newGroupName.trim()}
-                  className="p-1.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Plus size={20} />
-                </button>
-              </form>
-              <div className="flex flex-wrap items-center gap-1.5 pl-11">
-                {PRESET_COLORS.map(c => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setNewGroupColor(c)}
-                    className={`w-4 h-4 rounded-full border ${newGroupColor.toLowerCase() === c.toLowerCase() ? 'border-slate-800 scale-110 shadow-sm' : 'border-black/10 hover:scale-110'} transition-all`}
-                    style={{ backgroundColor: c }}
-                    title={c}
-                  />
-                ))}
+                )}
               </div>
             </div>
           </section>

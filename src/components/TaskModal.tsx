@@ -27,6 +27,7 @@ export const TaskModal = () => {
   const [progress, setProgress] = useState(0);
   const [isMilestone, setIsMilestone] = useState(false);
   const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
+  const [dependencies, setDependencies] = useState<string[]>([]);
 
   useEffect(() => {
     if (isTaskModalOpen) {
@@ -39,6 +40,7 @@ export const TaskModal = () => {
           setEndDate(format(task.endDate, 'yyyy-MM-dd'));
           setProgress(task.progress || 0);
           setIsMilestone(task.isMilestone || false);
+          setDependencies(task.dependencies || []);
         }
       } else {
         const today = startOfDay(new Date());
@@ -48,6 +50,7 @@ export const TaskModal = () => {
         setEndDate(format(addDays(today, 3), 'yyyy-MM-dd'));
         setProgress(0);
         setIsMilestone(false);
+        setDependencies([]);
       }
     }
   }, [isTaskModalOpen, editingTaskId, tasks]);
@@ -78,6 +81,7 @@ export const TaskModal = () => {
         endDate: isMilestone ? start : end,
         progress,
         isMilestone,
+        dependencies,
       });
     } else {
       addTask({
@@ -87,6 +91,7 @@ export const TaskModal = () => {
         endDate: isMilestone ? start : end,
         progress,
         isMilestone,
+        dependencies,
       });
     }
     
@@ -234,6 +239,37 @@ export const TaskModal = () => {
                 />
               </div>
             )}
+          </div>
+
+          <div className="relative">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {language === 'zh' ? '前置任務 (Dependencies)' : 'Dependencies'}
+            </label>
+            <div className="border border-slate-300 rounded-lg max-h-32 overflow-y-auto p-2 bg-slate-50">
+              {tasks.filter(t => t.id !== editingTaskId).length === 0 ? (
+                <span className="text-sm text-slate-400 italic">
+                  {language === 'zh' ? '沒有其他任務可選' : 'No other tasks available'}
+                </span>
+              ) : (
+                tasks.filter(t => t.id !== editingTaskId).map(t => (
+                  <label key={t.id} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-slate-100 px-1 rounded">
+                    <input
+                      type="checkbox"
+                      checked={dependencies.includes(t.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setDependencies([...dependencies, t.id]);
+                        } else {
+                          setDependencies(dependencies.filter(id => id !== t.id));
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-slate-700 truncate">{t.name}</span>
+                  </label>
+                ))
+              )}
+            </div>
           </div>
 
           <div>

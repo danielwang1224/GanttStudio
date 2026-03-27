@@ -64,11 +64,56 @@ export interface Task {
   endDate: Date;
   progress: number;
   isMilestone?: boolean;
+  dependencies?: string[];
 }
 
 export interface HistoryState {
   tasks: Task[];
 }
+
+const cascadeDates = (tasks: Task[]): Task[] => {
+  let currentTasks = [...tasks];
+  let changed = true;
+  let iterations = 0;
+  const MAX_ITERATIONS = 1000;
+
+  while (changed && iterations < MAX_ITERATIONS) {
+    changed = false;
+    iterations++;
+
+    for (let i = 0; i < currentTasks.length; i++) {
+      const task = currentTasks[i];
+      if (!task.dependencies || task.dependencies.length === 0) continue;
+
+      let maxPredecessorEnd = new Date(-8640000000000000);
+      let hasValidPredecessor = false;
+
+      for (const depId of task.dependencies) {
+        const pred = currentTasks.find(t => t.id === depId);
+        if (pred) {
+          hasValidPredecessor = true;
+          if (pred.endDate > maxPredecessorEnd) {
+            maxPredecessorEnd = pred.endDate;
+          }
+        }
+      }
+
+      if (hasValidPredecessor) {
+        const minStartDate = addDays(startOfDay(maxPredecessorEnd), 1);
+        if (startOfDay(task.startDate).getTime() !== minStartDate.getTime()) {
+          const daysToShift = differenceInDays(minStartDate, startOfDay(task.startDate));
+          currentTasks[i] = {
+            ...task,
+            startDate: addDays(task.startDate, daysToShift),
+            endDate: addDays(task.endDate, daysToShift)
+          };
+          changed = true;
+        }
+      }
+    }
+  }
+  return currentTasks;
+};
 
 const calculateBounds = (tasks: Task[], viewMode: ViewMode) => {
   if (tasks.length === 0) {
@@ -362,21 +407,26 @@ export const useStore = create<AppState>((set) => ({
           ...t,
           color: t.color || (t as any).ColorCode || ((v.data as any).groups ? (v.data as any).groups.find((g: any) => g.id === (t as any).groupId)?.color : undefined) || '#94a3b8',
           startDate: new Date(t.startDate),
-          endDate: new Date(t.endDate)
+          endDate: new Date(t.endDate),
+          dependencies: t.dependencies || []
         }))
       }
     }));
+
+    let importedTasks = data.tasks;
+    importedTasks = cascadeDates(importedTasks);
+    const importedBounds = calculateBounds(importedTasks, data.viewMode || 'weekly');
 
     return {
       clientName: data.clientName || 'Client A',
       projectName: data.projectName || 'New Project',
       projectVersion: data.projectVersion || 'v0',
-      tasks: data.tasks,
+      tasks: importedTasks,
       versions: parsedVersions,
       viewMode: data.viewMode || 'weekly',
       zoomLevel: data.zoomLevel || 100,
-      chartStartDate: bounds.chartStartDate,
-      chartEndDate: bounds.chartEndDate,
+      chartStartDate: importedBounds.chartStartDate,
+      chartEndDate: importedBounds.chartEndDate,
     };
   }),
 
@@ -387,7 +437,8 @@ export const useStore = create<AppState>((set) => ({
 
   setTasks: (tasks) => set((state) => ({ ...pushHistory(state), tasks })),
   updateTask: (id, updates) => set((state) => {
-    const newTasks = state.tasks.map(t => t.id === id ? { ...t, ...updates } : t);
+    let newTasks = state.tasks.map(t => t.id === id ? { ...t, ...updates } : t);
+    newTasks = cascadeDates(newTasks);
     const bounds = calculateBounds(newTasks, state.viewMode);
     return {
       ...pushHistory(state),
@@ -397,7 +448,8 @@ export const useStore = create<AppState>((set) => ({
     };
   }),
   updateTaskDates: (id, startDate, endDate) => set((state) => {
-    const newTasks = state.tasks.map(t => t.id === id ? { ...t, startDate, endDate } : t);
+    let newTasks = state.tasks.map(t => t.id === id ? { ...t, startDate, endDate } : t);
+    newTasks = cascadeDates(newTasks);
     const bounds = calculateBounds(newTasks, state.viewMode);
     return {
       tasks: newTasks,
@@ -411,7 +463,8 @@ export const useStore = create<AppState>((set) => ({
     const stateToPush = { ...state, tasks: revertedTasks };
     
     // Then apply the new state
-    const newTasks = state.tasks.map(t => t.id === id ? { ...t, startDate: newStartDate, endDate: newEndDate } : t);
+    let newTasks = state.tasks.map(t => t.id === id ? { ...t, startDate: newStartDate, endDate: newEndDate } : t);
+    newTasks = cascadeDates(newTasks);
     const bounds = calculateBounds(newTasks, state.viewMode);
     
     return {
@@ -423,7 +476,8 @@ export const useStore = create<AppState>((set) => ({
   }),
   addTask: (taskData) => set((state) => {
     const newTask = { ...taskData, id: `t${Date.now()}`, progress: taskData.progress ?? 0 };
-    const newTasks = [...state.tasks, newTask];
+    let newTasks = [...state.tasks, newTask];
+    newTasks = cascadeDates(newTasks);
     const bounds = calculateBounds(newTasks, state.viewMode);
     return {
       ...pushHistory(state),

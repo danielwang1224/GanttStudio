@@ -317,7 +317,8 @@ export const Toolbar = ({ svgRef }: { svgRef: React.RefObject<SVGSVGElement | nu
             ...t,
             color: t.color || t.ColorCode || (data.groups ? data.groups.find((g: any) => g.id === t.groupId)?.color : undefined) || '#94a3b8',
             startDate: new Date(t.startDate),
-            endDate: new Date(t.endDate)
+            endDate: new Date(t.endDate),
+            dependencies: t.dependencies || []
           }));
           importProject({ ...data, tasks: parsedTasks });
         } else if (data.Tasks && Array.isArray(data.Tasks)) {
@@ -328,7 +329,8 @@ export const Toolbar = ({ svgRef }: { svgRef: React.RefObject<SVGSVGElement | nu
               color: t.ColorCode || (data.Groups ? data.Groups.find((g: any) => g.Id === t.GroupId)?.ColorCode : undefined) || '#94a3b8',
               startDate: new Date(t.StartDate),
               endDate: new Date(t.EndDate),
-              progress: t.Progress || 0
+              progress: t.Progress || 0,
+              dependencies: t.Dependencies || []
             };
           });
 

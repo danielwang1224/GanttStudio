@@ -22,6 +22,7 @@ export const GanttChart = React.forwardRef<SVGSVGElement, GanttChartProps>(({ sc
     commitTaskDates,
     showVerticalLines,
     showTodayHighlight,
+    showDependencies,
     language,
     dateFormat,
     weekNumbering,
@@ -340,40 +341,42 @@ export const GanttChart = React.forwardRef<SVGSVGElement, GanttChartProps>(({ sc
         </g>
 
         {/* Dependencies */}
-        <g transform={`translate(0, ${HEADER_HEIGHT})`}>
-          {taskPositions.map(task => {
-            if (!task.dependencies || task.dependencies.length === 0) return null;
-            return task.dependencies.map(depId => {
-              const pred = taskPositions.find(t => t.id === depId);
-              if (!pred) return null;
+        {showDependencies && (
+          <g transform={`translate(0, ${HEADER_HEIGHT})`}>
+            {taskPositions.map(task => {
+              if (!task.dependencies || task.dependencies.length === 0) return null;
+              return task.dependencies.map(depId => {
+                const pred = taskPositions.find(t => t.id === depId);
+                if (!pred) return null;
 
-              const predIsMilestone = pred.isMilestone;
-              const succIsMilestone = task.isMilestone;
+                const predIsMilestone = pred.isMilestone;
+                const succIsMilestone = task.isMilestone;
 
-              const predStartOffset = differenceInDays(pred.startDate, effectiveChartStartDate);
-              const predDuration = differenceInDays(pred.endDate, pred.startDate) + 1;
-              const predX = predStartOffset * DAY_WIDTH;
-              const predWidth = predDuration * DAY_WIDTH;
+                const predStartOffset = differenceInDays(pred.startDate, effectiveChartStartDate);
+                const predDuration = differenceInDays(pred.endDate, pred.startDate) + 1;
+                const predX = predStartOffset * DAY_WIDTH;
+                const predWidth = predDuration * DAY_WIDTH;
 
-              const succStartOffset = differenceInDays(task.startDate, effectiveChartStartDate);
-              const succX = succStartOffset * DAY_WIDTH;
+                const succStartOffset = differenceInDays(task.startDate, effectiveChartStartDate);
+                const succX = succStartOffset * DAY_WIDTH;
 
-              const startX = predX + (predIsMilestone ? 12 : predWidth);
-              const startY = pred.y + pred.height / 2;
-              const endX = succX - (succIsMilestone ? 12 : 0);
-              const endY = task.y + task.height / 2;
+                const startX = predX + (predIsMilestone ? 12 : predWidth);
+                const startY = pred.y + pred.height / 2;
+                const endX = succX - (succIsMilestone ? 12 : 0);
+                const endY = task.y + task.height / 2;
 
-              const path = `M ${startX} ${startY} C ${startX + 20} ${startY}, ${endX - 20} ${endY}, ${endX - 5} ${endY}`;
+                const path = `M ${startX} ${startY} C ${startX + 20} ${startY}, ${endX - 20} ${endY}, ${endX - 5} ${endY}`;
 
-              return (
-                <g key={`${pred.id}-${task.id}`}>
-                  <path d={path} fill="none" stroke="#94a3b8" strokeWidth="1.5" />
-                  <polygon points={`${endX-5},${endY-4} ${endX},${endY} ${endX-5},${endY+4}`} fill="#94a3b8" />
-                </g>
-              );
-            });
-          })}
-        </g>
+                return (
+                  <g key={`${pred.id}-${task.id}`}>
+                    <path d={path} fill="none" stroke="#94a3b8" strokeWidth="1.5" />
+                    <polygon points={`${endX-5},${endY-4} ${endX},${endY} ${endX-5},${endY+4}`} fill="#94a3b8" />
+                  </g>
+                );
+              });
+            })}
+          </g>
+        )}
 
         {/* Tasks */}
         <g transform={`translate(0, ${HEADER_HEIGHT})`}>

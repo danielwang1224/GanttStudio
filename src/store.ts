@@ -175,6 +175,9 @@ interface AppState {
   
   showTodayHighlight: boolean;
   setShowTodayHighlight: (show: boolean) => void;
+
+  showDependencies: boolean;
+  setShowDependencies: (show: boolean) => void;
   
   dateFormat: string;
   setDateFormat: (format: string) => void;
@@ -305,6 +308,9 @@ export const useStore = create<AppState>((set) => ({
 
   showTodayHighlight: false,
   setShowTodayHighlight: (showTodayHighlight) => set({ showTodayHighlight }),
+
+  showDependencies: true,
+  setShowDependencies: (showDependencies) => set({ showDependencies }),
 
   dateFormat: 'd-MMM',
   setDateFormat: (dateFormat) => set({ dateFormat }),
